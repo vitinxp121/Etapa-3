@@ -1,0 +1,524 @@
+/******************************************************************************
+
+Welcome to GDB Online.
+GDB online is an online compiler and debugger tool for C, C++, Python, Java, PHP, Ruby, Perl,
+C#, OCaml, VB, Swift, Pascal, Fortran, Haskell, Objective-C, Assembly, HTML, CSS, JS, SQLite, Prolog.
+Code, Compile, Run and Debug online from anywhere in world.
+
+*******************************************************************************/
+#include <iostream>
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <iomanip>
+#include <limits>
+using namespace std;
+
+// Limites do sistema
+const int MAX_CONTAS = 100;
+const int MAX_MOVIMENTACOES = 500;
+
+// Arrays para armazenar as contas
+int numeroConta[MAX_CONTAS];
+string nomeCliente[MAX_CONTAS];
+string cpf[MAX_CONTAS];
+int tipoConta[MAX_CONTAS];
+double saldo[MAX_CONTAS];
+bool contaAtiva[MAX_CONTAS];
+
+int quantidadeContas = 0;
+
+// Arrays para armazenar o historico de movimentacoes
+int contaMovimentacao[MAX_MOVIMENTACOES];
+char tipoMovimentacao[MAX_MOVIMENTACOES];
+double valorMovimentacao[MAX_MOVIMENTACOES];
+
+int quantidadeMovimentacoes = 0;
+
+// Funcao para carregar as contas do arquivo contas.txt
+void carregarContas() {
+    ifstream arquivo("contas.txt");
+    
+     if (!arquivo.is_open()) {
+        // Na primeira execucao, o arquivo ainda pode nao existir.
+        return;
+    }
+    
+    string linha;
+    while (getline(arquivo, linha) && quantidadeContas < MAX_CONTAS) {
+        stringstream ss(linha);
+        string campo;
+        string numero, nome, documento, tipo, valorSaldo, situacao;
+
+    if (getline(ss, numero, ';') &&
+            getline(ss, nome, ';') &&
+            getline(ss, documento, ';') &&
+            getline(ss, tipo, ';') &&
+            getline(ss, valorSaldo, ';') &&
+            getline(ss, situacao)) {
+               try {
+                numeroConta[quantidadeContas] = stoi(numero);
+                nomeCliente[quantidadeContas] = nome;
+                cpf[quantidadeContas] = documento;
+                tipoConta[quantidadeContas] = stoi(tipo);
+                saldo[quantidadeContas] = stod(valorSaldo);
+                contaAtiva[quantidadeContas] = (stoi(situacao) == 1);
+                quantidadeContas++;
+            } catch (...) {
+                cout << "Aviso: uma linha invalida foi ignorada em contas.txt." << endl;
+            } 
+            }
+    }
+     arquivo.close();
+}
+// Funcao para salvar todas as contas no arquivo contas.txt
+void salvarContas() {
+    ofstream arquivo("contas.txt");
+    
+    if (arquivo.is_open()) {
+        arquivo << fixed << setprecision(2);
+        
+        for (int i = 0; i < quantidadeContas; i++) {
+            arquivo << numeroConta[i] << ";"
+                    << nomeCliente[i] << ";"
+                    << cpf[i] << ";"
+                    << tipoConta[i] << ";"
+                    << saldo[i] << ";"
+                    << (contaAtiva[i] ? 1 : 0) << endl;
+        }
+        
+        arquivo.close();
+    } else {
+        cout << "Erro ao abrir contas.txt para gravacao!" << endl;
+    }
+}
+
+// Funcao para carregar as movimentacoes do arquivo movimentacoes.txt
+void carregarMovimentacoes() {
+    ifstream arquivo("movimentacoes.txt");
+
+    if (!arquivo.is_open()) {
+        // Na primeira execucao, o arquivo ainda pode nao existir.
+        return;
+    }
+    
+    string linha;
+    while (getline(arquivo, linha) &&
+           quantidadeMovimentacoes < MAX_MOVIMENTACOES) {
+        stringstream ss(linha);
+        string numero, tipo, valor;
+        
+        if (getline(ss, numero, ';') &&
+            getline(ss, tipo, ';') &&
+            getline(ss, valor)) {
+            try {
+                contaMovimentacao[quantidadeMovimentacoes] = stoi(numero);
+                tipoMovimentacao[quantidadeMovimentacoes] = tipo[0];
+                valorMovimentacao[quantidadeMovimentacoes] = stod(valor);
+                quantidadeMovimentacoes++;
+            } catch (...) {
+                cout << "Aviso: uma linha invalida foi ignorada em movimentacoes.txt." << endl;
+            }
+        }
+    }
+
+    arquivo.close();
+}
+
+// Funcao para salvar todo o historico no arquivo movimentacoes.txt
+void salvarMovimentacoes() {
+    ofstream arquivo("movimentacoes.txt");
+
+    if (arquivo.is_open()) {
+        arquivo << fixed << setprecision(2);
+
+        for (int i = 0; i < quantidadeMovimentacoes; i++) {
+            arquivo << contaMovimentacao[i] << ";"
+                    << tipoMovimentacao[i] << ";"
+                    << valorMovimentacao[i] << endl;
+        }
+        
+        arquivo.close();
+    } else {
+        cout << "Erro ao abrir movimentacoes.txt para gravacao!" << endl;
+    }
+}
+
+int main()
+{
+    int opcao = -1;
+    
+    // Recuperar os dados salvos antes de exibir o menu
+    carregarContas();
+    carregarMovimentacoes();
+    
+    cout << "Dados carregados com sucesso!" << endl;
+    cout << "Contas encontradas: " << quantidadeContas << endl;
+    cout << "Movimentacoes encontradas: " << quantidadeMovimentacoes << endl;
+    
+     // Menu principal do sistema bancario
+    while (opcao != 0) {
+        cout << "\n============================" << endl;
+        cout << "      Sistema Bancario      " << endl;
+        cout << "============================" << endl;
+        cout << "1- Cadastrar Conta" << endl;
+        cout << "2- Listar Contas" << endl;
+        cout << "3- Consultar Conta" << endl;
+        cout << "4- Realizar deposito" << endl;
+        cout << "5- Realizar saque" << endl;
+        cout << "6- Realizar transferencia" << endl;
+        cout << "7- Exibir extrato" << endl;
+        cout << "0- Sair" << endl;
+        cout << "============================" << endl;
+        
+       cout << "Escolha uma opcao: ";
+
+    if (!(cin >> opcao)) {
+
+    if (cin.eof()) {
+        cout << "\nEntrada encerrada. Finalizando programa..." << endl;
+        break;
+    }
+
+    cin.clear();
+
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+
+    cout << "Opcao invalida! Digite apenas numeros." << endl;
+
+    continue;
+}
+        
+        // Opcao 1 - Cadastrar Conta
+        if (opcao == 1) {
+            if (quantidadeContas < MAX_CONTAS) {
+                int novoNumero;
+                cout << "Digite o numero da conta: ";
+                cin >> novoNumero;
+
+                // Verificar se o numero da conta ja existe
+                bool numeroExiste = false;
+                for (int i = 0; i < quantidadeContas; i++) {
+                    if (numeroConta[i] == novoNumero) {
+                        numeroExiste = true;
+                        break;
+                    }
+                }
+                if (numeroExiste) {
+                    cout << "Ja existe uma conta com esse numero!" << endl;
+                } else {
+                    numeroConta[quantidadeContas] = novoNumero;
+
+                    cout << "Digite o CPF: ";
+                    cin >> cpf[quantidadeContas];
+
+                    cout << "Digite o nome do cliente: ";
+                    cin.ignore();
+                    getline(cin, nomeCliente[quantidadeContas]);
+
+                    cout << "Digite o tipo da conta: ";
+                    cin >> tipoConta[quantidadeContas];
+
+                    cout << "Digite o saldo inicial: ";
+                    cin >> saldo[quantidadeContas];
+
+                    contaAtiva[quantidadeContas] = true;
+                    quantidadeContas++;
+                    
+                    salvarContas();
+                    cout << "Conta cadastrada e salva com sucesso!" << endl;
+                }
+            } else {
+                cout << "Limite de contas atingido!" << endl;
+            }
+        }
+        
+        // Opcao 2 - Listar Contas
+        else if (opcao == 2) {
+            if (quantidadeContas == 0) {
+                cout << "Nenhuma conta cadastrada!" << endl;
+            } else {
+                for (int i = 0; i < quantidadeContas; i++) {
+                    cout << "\nNumero: " << numeroConta[i] << endl;
+                    cout << "Nome: " << nomeCliente[i] << endl;
+                    cout << "CPF: " << cpf[i] << endl;
+                    cout << "Tipo: " << tipoConta[i] << endl;
+                    cout << "Saldo: R$ " << fixed << setprecision(2) << saldo[i] << endl;
+                    cout << "Situacao: " << (contaAtiva[i] ? "Ativa" : "Inativa") << endl;
+                }
+            }
+        }
+        
+        // Opcao 3 - Consultar Conta
+        else if (opcao == 3) {
+            int numeroPesquisa;
+            cout << "Digite o numero da conta: ";
+            cin >> numeroPesquisa;
+
+            int indice = -1;
+            for (int i = 0; i < quantidadeContas; i++) {
+                if (numeroConta[i] == numeroPesquisa) {
+                    indice = i;
+                    break;
+                }
+            }
+
+            if (indice != -1) {
+                cout << "Conta encontrada!" << endl;
+                cout << "Numero: " << numeroConta[indice] << endl;
+                cout << "Nome: " << nomeCliente[indice] << endl;
+                cout << "CPF: " << cpf[indice] << endl;
+                cout << "Tipo: " << tipoConta[indice] << endl;
+                cout << "Saldo: R$ " << fixed << setprecision(2) << saldo[indice] << endl;
+                cout << "Situacao: " << (contaAtiva[indice] ? "Ativa" : "Inativa") << endl;
+            } else {
+                cout << "Conta nao encontrada!" << endl;
+            }
+        }
+// Opcao 3 - Consultar Conta
+        else if (opcao == 3) {
+            int numeroPesquisa;
+            cout << "Digite o numero da conta: ";
+            cin >> numeroPesquisa;
+
+            int indice = -1;
+            for (int i = 0; i < quantidadeContas; i++) {
+                if (numeroConta[i] == numeroPesquisa) {
+                    indice = i;
+                    break;
+                }
+            }
+
+            if (indice != -1) {
+                cout << "Conta encontrada!" << endl;
+                cout << "Numero: " << numeroConta[indice] << endl;
+                cout << "Nome: " << nomeCliente[indice] << endl;
+                cout << "CPF: " << cpf[indice] << endl;
+                cout << "Tipo: " << tipoConta[indice] << endl;
+                cout << "Saldo: R$ " << fixed << setprecision(2) << saldo[indice] << endl;
+                cout << "Situacao: " << (contaAtiva[indice] ? "Ativa" : "Inativa") << endl;
+            } else {
+                cout << "Conta nao encontrada!" << endl;
+            }
+        }
+        
+         // Opcao 4 - Realizar Deposito
+        else if (opcao == 4) {
+            int numeroPesquisa;
+            cout << "Digite o numero da conta: ";
+            cin >> numeroPesquisa;
+
+            int indice = -1;
+            for (int i = 0; i < quantidadeContas; i++) {
+                if (numeroConta[i] == numeroPesquisa) {
+                    indice = i;
+                    break;
+                }
+            }
+
+            if (indice != -1 && contaAtiva[indice]) {
+                double valor;
+                cout << "Digite o valor do deposito: ";
+                cin >> valor;
+
+                if (valor > 0) {
+                    if (quantidadeMovimentacoes < MAX_MOVIMENTACOES) {
+                        saldo[indice] += valor;
+
+                        contaMovimentacao[quantidadeMovimentacoes] = numeroConta[indice];
+                        tipoMovimentacao[quantidadeMovimentacoes] = 'D';
+                        valorMovimentacao[quantidadeMovimentacoes] = valor;
+                        quantidadeMovimentacoes++;
+
+                        salvarContas();
+                        salvarMovimentacoes();
+
+                        cout << "Deposito realizado com sucesso!" << endl;
+                        cout << "Novo saldo: R$ " << fixed << setprecision(2) << saldo[indice] << endl;
+                    } else {
+                        cout << "Historico de movimentacoes cheio!" << endl;
+                    }
+                } else {
+                    cout << "Valor de deposito invalido!" << endl;
+                }
+            } else {
+                cout << "Conta nao encontrada ou inativa!" << endl;
+            }
+        }
+    
+    // Opcao 5 - Realizar Saque
+        else if (opcao == 5) {
+            int numeroPesquisa;
+            cout << "Digite o numero da conta: ";
+            cin >> numeroPesquisa;
+
+            int indice = -1;
+            for (int i = 0; i < quantidadeContas; i++) {
+                if (numeroConta[i] == numeroPesquisa) {
+                    indice = i;
+                    break;
+                }
+            }
+
+            if (indice != -1 && contaAtiva[indice]) {
+                double valor;
+                cout << "Digite o valor do saque: ";
+                cin >> valor;
+
+                if (valor > 0) {
+                    if (saldo[indice] >= valor) {
+                        if (quantidadeMovimentacoes < MAX_MOVIMENTACOES) {
+                            saldo[indice] -= valor;
+
+                            contaMovimentacao[quantidadeMovimentacoes] = numeroConta[indice];
+                            tipoMovimentacao[quantidadeMovimentacoes] = 'S';
+                            valorMovimentacao[quantidadeMovimentacoes] = valor;
+                            quantidadeMovimentacoes++;
+
+                            salvarContas();
+                            salvarMovimentacoes();
+
+                            cout << "Saque realizado com sucesso!" << endl;
+                            cout << "Novo saldo: R$ " << fixed << setprecision(2) << saldo[indice] << endl;
+                        } else {
+                            cout << "Historico de movimentacoes cheio!" << endl;
+                        }
+                    } else {
+                        cout << "Saldo insuficiente!" << endl;
+                    }
+                } else {
+                    cout << "Valor de saque invalido!" << endl;
+                }
+            } else {
+                cout << "Conta nao encontrada ou inativa!" << endl;
+            }
+        }
+        
+         // Opcao 6 - Realizar Transferencia
+        else if (opcao == 6) {
+            int contaOrigem, contaDestino;
+            int indiceOrigem = -1;
+            int indiceDestino = -1;
+            double valor;
+
+            cout << "Digite o numero da conta de origem: ";
+            cin >> contaOrigem;
+            cout << "Digite o numero da conta de destino: ";
+            cin >> contaDestino;
+
+            for (int i = 0; i < quantidadeContas; i++) {
+                if (numeroConta[i] == contaOrigem) {
+                    indiceOrigem = i;
+                }
+                if (numeroConta[i] == contaDestino) {
+                    indiceDestino = i;
+                }
+            }
+
+            if (indiceOrigem != -1 && indiceDestino != -1 &&
+                contaAtiva[indiceOrigem] && contaAtiva[indiceDestino]) {
+                if (indiceOrigem != indiceDestino) {
+                    cout << "Digite o valor da transferencia: ";
+                    cin >> valor;
+
+                    if (valor > 0) {
+                        if (saldo[indiceOrigem] >= valor) {
+                            if (quantidadeMovimentacoes + 2 <= MAX_MOVIMENTACOES) {
+                                saldo[indiceOrigem] -= valor;
+                                saldo[indiceDestino] += valor;
+
+                                // Registro de saida na conta de origem
+                                contaMovimentacao[quantidadeMovimentacoes] = contaOrigem;
+                                tipoMovimentacao[quantidadeMovimentacoes] = 'S';
+                                valorMovimentacao[quantidadeMovimentacoes] = valor;
+                                quantidadeMovimentacoes++;
+
+                                // Registro de entrada na conta de destino
+                                contaMovimentacao[quantidadeMovimentacoes] = contaDestino;
+                                tipoMovimentacao[quantidadeMovimentacoes] = 'D';
+                                valorMovimentacao[quantidadeMovimentacoes] = valor;
+                                quantidadeMovimentacoes++;
+
+                                salvarContas();
+                                salvarMovimentacoes();
+
+                                cout << "Transferencia realizada com sucesso!" << endl;
+                            } else {
+                                cout << "Historico de movimentacoes cheio!" << endl;
+                            }
+                        } else {
+                            cout << "Saldo insuficiente!" << endl;
+                        }
+                    } else {
+                        cout << "Valor invalido!" << endl;
+                    }
+                } else {
+                    cout << "As contas devem ser diferentes!" << endl;
+                }
+            } else {
+                cout << "Conta de origem ou destino nao encontrada ou inativa!" << endl;
+            }
+        }
+
+     // Opcao 7 - Exibir Extrato
+        else if (opcao == 7) {
+            int numeroPesquisa;
+            cout << "Digite o numero da conta: ";
+            cin >> numeroPesquisa;
+
+            int indice = -1;
+            for (int i = 0; i < quantidadeContas; i++) {
+                if (numeroConta[i] == numeroPesquisa) {
+                    indice = i;
+                    break;
+                }
+            }
+
+            if (indice != -1) {
+                cout << "\n===== EXTRATO BANCARIO =====" << endl;
+                cout << "Conta: " << numeroConta[indice] << endl;
+                cout << "Cliente: " << nomeCliente[indice] << endl;
+
+                bool encontrouMovimentacao = false;
+                for (int i = 0; i < quantidadeMovimentacoes; i++) {
+                    if (contaMovimentacao[i] == numeroPesquisa) {
+                        encontrouMovimentacao = true;
+
+                        if (tipoMovimentacao[i] == 'D') {
+                            cout << "Deposito: R$ " << fixed << setprecision(2)
+                                 << valorMovimentacao[i] << endl;
+                        } else if (tipoMovimentacao[i] == 'S') {
+                            cout << "Saque: R$ " << fixed << setprecision(2)
+                                 << valorMovimentacao[i] << endl;
+                        }
+                    }
+                }
+
+                if (!encontrouMovimentacao) {
+                    cout << "Nenhuma movimentacao encontrada." << endl;
+                }
+
+                cout << "Saldo atual: R$ " << fixed << setprecision(2) << saldo[indice] << endl;
+                cout << "============================" << endl;
+            } else {
+                cout << "Conta nao encontrada!" << endl;
+            }
+        }
+        
+        // Opcao 0 - Sair do sistema
+        else if (opcao == 0) {
+            // Salvar novamente ao encerrar o programa
+            salvarContas();
+            salvarMovimentacoes();
+            cout << "Dados salvos. Saindo do sistema..." << endl;
+        }
+
+        // Opcao invalida
+        else {
+            cout << "Opcao invalida! Tente novamente." << endl;
+        }
+    }
+
+
+    return 0;
+}
